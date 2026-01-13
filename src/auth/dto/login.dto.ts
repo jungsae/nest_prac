@@ -1,7 +1,7 @@
 import { IsEmail, IsString, MinLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class LoginDto {
+export class LoginUserDto {
     @ApiProperty({ description: '이메일', example: 'test@example.com' })
     @IsEmail({}, { message: '이메일 형식이 올바르지 않습니다.' })
     email: string;

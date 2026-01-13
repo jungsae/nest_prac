@@ -1,6 +1,6 @@
 import { IsString, IsEmail, MinLength, IsEnum } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { Role } from '../enums/role.enum';
+import { Role } from 'src/users/enums/role.enum';
 
 export class CreateUserDto {
     @ApiProperty({ description: '이름', example: '홍길동' })

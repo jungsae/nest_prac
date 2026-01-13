@@ -1,9 +1,10 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
+import { CreateUserDto } from './dto/request/create-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entity/user.entity';
 import { Repository } from 'typeorm';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateUserDto } from './dto/request/update-user.dto';
+import { UserResponseDto } from './dto/response/user-response.dto';
 
 @Injectable()
 export class UsersService {
@@ -27,39 +28,40 @@ export class UsersService {
         return user;
     }
 
-    async findByEmail(email: string): Promise<User> {
-        const user = await this.userRepository.findOneBy({ email });
-        if (!user) {
+    async findByEmail(email: string): Promise<User | null> {
+        const userInfo = await this.userRepository.findOneBy({ email });
+        if (!userInfo) {
             throw new NotFoundException(`${email}에 해당하는 유저가 없습니다.`);
         }
-        return user;
+        return userInfo;
     }
 
-    async restoreUser(id: number): Promise<User> {
-        const user = await this.userRepository.findOne({
+    async restoreUser(id: number): Promise<User | null> {
+        const userInfo = await this.userRepository.findOne({
             where: { id },
             withDeleted: true
         });
-        if (!user) {
+        if (!userInfo) {
             throw new NotFoundException(`${id}에 해당하는 유저가 없습니다.`);
         }
-        if (user.deletedAt === null) {
+        if (userInfo.deletedAt === null) {
             throw new BadRequestException('유저가 이미 복구되었습니다.');
         }
         const result = await this.userRepository.restore(id);
         if (result.affected === 0) {
             throw new BadRequestException('유저 복구에 실패했습니다.');
         }
-        return user;
+        return userInfo;
     }
 
-    async create(userDto: CreateUserDto): Promise<User> {
-        return await this.userRepository.save(userDto);
+    async create(userDto: CreateUserDto): Promise<UserResponseDto> {
+        const userInfo = await this.userRepository.save(userDto);
+        return new UserResponseDto(userInfo);
     }
 
-    async update(id: number, updateUserDto: UpdateUserDto): Promise<boolean> {
-        const result = await this.userRepository.update(id, updateUserDto);
-        if (!result.affected) {
+    async update(email: string, updateUserDto: UpdateUserDto): Promise<boolean> {
+        const result = await this.userRepository.update({ email }, updateUserDto);
+        if (result.affected === 0) {
             throw new BadRequestException('유저 업데이트에 실패했습니다.');
         }
         return true;

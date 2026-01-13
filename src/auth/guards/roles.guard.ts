@@ -15,7 +15,7 @@ export class RoleGuard implements CanActivate {
         ]);
 
         // 역할이 지정되지 않았으면 통과 (인증만 체크)
-        if (!requiredRoles) {
+        if (!requiredRoles || requiredRoles.length === 0) {
             return true;
         }
 
@@ -23,6 +23,7 @@ export class RoleGuard implements CanActivate {
 
         // 사용자의 역할이 필요한 역할 중 하나와 일치하는지 확인
         const hasRole = requiredRoles.some((role) => user.role === role);
+
         if (!hasRole) {
             throw new ForbiddenException('접근 권한이 없습니다.');
         }

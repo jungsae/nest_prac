@@ -1,9 +1,9 @@
 import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
-import { CreateUserDto } from 'src/users/dto/create-user.dto';
+import { CreateUserDto } from 'src/users/dto/request/create-user.dto';
 import { UsersService } from 'src/users/users.service';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
-import { LoginDto } from 'src/users/dto/login.dto';
+import { LoginUserDto } from 'src/auth/dto/login.dto';
 
 @Injectable()
 export class AuthService {
@@ -22,9 +22,11 @@ export class AuthService {
         return await this.usersService.create({ ...body, password: hashedPassword });
     }
 
-    async signin(body: LoginDto) {
+    async signin(body: LoginUserDto) {
         const userInfo = await this.usersService.findByEmail(body.email);
-
+        if (!userInfo) {
+            throw new UnauthorizedException('이메일 또는 비밀번호를 확인해주세요.');
+        }
         const isMatch = await bcrypt.compare(body.password, userInfo.password);
         if (!isMatch) {
             throw new UnauthorizedException('이메일 또는 비밀번호를 확인해주세요.');
