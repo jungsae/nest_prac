@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Delete, ParseIntPipe } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Delete, ParseIntPipe, NotFoundException } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { UsersService } from './users.service';
@@ -28,18 +28,21 @@ export class UsersController {
     @Auth()
     @Get('/me')
     @ApiOperation({ summary: '내 정보 조회', description: '내 정보를 조회합니다.' })
-    async findOne(@CurrentUser() user: CurrentUserType): Promise<UserResponseDto | null> {
+    async findOne(@CurrentUser() user: CurrentUserType): Promise<UserResponseDto> {
         const userInfo = await this.usersService.findByEmail(user.email);
-        return userInfo ? new UserResponseDto(userInfo) : null;
+        if (!userInfo) {
+            throw new NotFoundException(`${user.email}에 해당하는 유저가 없습니다.`);
+        }
+        return new UserResponseDto(userInfo);
     }
 
     // Admin API - 관리자만 접근 가능
     @Auth(Role.ADMIN)
     @Patch('/restore/:id')
     @ApiOperation({ summary: '유저 복구', description: '유저를 복구합니다. (관리자 전용)' })
-    async restore(@Param('id', ParseIntPipe) id: number): Promise<UserResponseDto | null> {
-        const userInfo = await this.usersService.restoreUser(id);
-        return userInfo ? new UserResponseDto(userInfo) : null;
+    async restore(@Param('id', ParseIntPipe) id: number): Promise<boolean> {
+        const result = await this.usersService.restoreUser(id);
+        return result;
     }
 
     // User API - 인증된 사용자만 접근 가능
