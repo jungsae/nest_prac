@@ -1,6 +1,15 @@
-import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
+import {
+    Column,
+    Entity,
+    PrimaryGeneratedColumn,
+    CreateDateColumn,
+    UpdateDateColumn,
+    DeleteDateColumn,
+    OneToMany
+} from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { Role } from '../enums/role.enum';
+import { Post } from 'src/posts/entity/post.entity';
 
 @Entity()
 export class User {
@@ -17,6 +26,10 @@ export class User {
     @Exclude()
     password: string;
 
+    @Column({ nullable: true })
+    @Exclude()
+    refreshToken: string;
+
     @Column({ type: 'enum', enum: Role, default: Role.USER })
     role: Role;
 
@@ -26,6 +39,12 @@ export class User {
     @UpdateDateColumn()
     updatedAt: Date;
 
+    @Column({ nullable: true })
     @DeleteDateColumn()
-    deletedAt?: Date | null;
+    @Exclude()
+    deletedAt: Date | null;
+
+    // @OneToMany(() => Post, (post) => post.user, { cascade: true })
+    @OneToMany(() => Post, (post) => post.user)
+    posts: Post[];
 }
